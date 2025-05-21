@@ -87,6 +87,10 @@ async function updateDeals(dealId, first, second, third) {
     }
 }
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function calculateResponseTimes() {
     var total = 0;
     const deals = await fetchDeals();
@@ -106,6 +110,7 @@ async function calculateResponseTimes() {
 
 
             await updateDeals(deal.ID, first, second, third);
+            await delay(500);
             total++;
         }
     }

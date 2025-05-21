@@ -1,7 +1,16 @@
 const axios = require('axios');
+const axiosRetry = require('axios-retry');
 const dayjs = require('dayjs');
 const isoWeek = require('dayjs/plugin/isoWeek');
 require('dotenv').config();
+
+axiosRetry(axios, {
+    retries: 5,
+    retryDelay: axiosRetry.exponentialDelay,
+    retryCondition: (error) => {
+        return error.response?.status === 503 || error.code === 'ECONNABORTED';
+    }
+});
 
 async function fetchDeals() {
     const deals = [];

@@ -16,9 +16,9 @@ async function fetchDeals() {
             params: {
                 filter: {
                     "ID": 149751,
-                    "STAGE_ID": ["NEW", "4", "UC_SXWMDD"],
-                    ">=DATE_CREATE": lastWeekStart,
-                    "<=DATE_CREATE": lastWeekEnd
+                    //"STAGE_ID": ["NEW", "4", "UC_SXWMDD"],
+                    //">=DATE_CREATE": lastWeekStart,
+                    //"<=DATE_CREATE": lastWeekEnd
                 },
                 order: { "DATE_CREATE": "DESC" },
                 start: start

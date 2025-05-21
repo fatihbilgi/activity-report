@@ -15,7 +15,7 @@ async function fetchDeals() {
         const response = await axios.get(`${process.env.BITRIX_URL}/crm.deal.list`, {
             params: {
                 filter: {
-                    //"ID": 149751,
+                    "ID": 149751,
                     "STAGE_ID": ["NEW", "4", "UC_SXWMDD"],
                     ">=DATE_CREATE": lastWeekStart,
                     "<=DATE_CREATE": lastWeekEnd

@@ -72,24 +72,33 @@ async function fetchActivities(dealId) {
     return activities.slice(0, 3);
 }
 
-async function updateDeals(dealId, first, second, third) {
-    try {
-        await axios.post(`${process.env.BITRIX_URL}/crm.deal.update`, {
-            ID: dealId,
-            FIELDS: {
-                UF_CRM_1747742892: first,
-                UF_CRM_1747761003: second,
-                UF_CRM_1747761025: third
-            }
+async function batchUpdateDeals(updates) {
+    const batchSize = 50;
+    for (let i = 0; i < updates.length; i += batchSize) {
+        const chunk = updates.slice(i, i + batchSize);
+        const cmd = {};
+
+        chunk.forEach((u, index) => {
+            cmd[`update${index}`] = `crm.deal.update?ID=${u.id}&FIELDS[UF_CRM_1747742892]=${u.first}&FIELDS[UF_CRM_1747761003]=${u.second ?? ''}&FIELDS[UF_CRM_1747761025]=${u.third ?? ''}`;
         });
-    } catch (error) {
-        console.error(`Failed to update deal ${dealId}:`, error.response?.data || error.message);
+
+        try {
+            await axios.post(`${process.env.BITRIX_URL}/batch`, {
+                cmd
+            });
+            console.log(`Batch ${i / batchSize + 1} sent successfully.`);
+        } catch (error) {
+            console.error(`Batch update failed:`, error.response?.data || error.message);
+        }
+
+        // Delay between batches to avoid rate limits
+        await new Promise(res => setTimeout(res, 1000));
     }
 }
 
 async function calculateResponseTimes() {
-    var total = 0;
     const deals = await fetchDeals();
+    const updates = [];
 
     for (const deal of deals) {
         const dealCreated = dayjs(deal.DATE_CREATE);
@@ -97,20 +106,24 @@ async function calculateResponseTimes() {
 
         if (activities.length > 0 && activities[0].LAST_UPDATED) {
             const first = dayjs(activities[0].LAST_UPDATED).diff(dealCreated, 'minute');
-            const second = activities[1] && activities[1].LAST_UPDATED
+            const second = activities[1]?.LAST_UPDATED
                 ? dayjs(activities[1].LAST_UPDATED).diff(dayjs(activities[0].LAST_UPDATED), 'minute')
                 : null;
-            const third = activities[2] && activities[2].LAST_UPDATED
+            const third = activities[2]?.LAST_UPDATED
                 ? dayjs(activities[2].LAST_UPDATED).diff(dayjs(activities[1].LAST_UPDATED), 'minute')
                 : null;
 
-
-            await updateDeals(deal.ID, first, second, third);
-            total++;
+            updates.push({
+                id: deal.ID,
+                first,
+                second,
+                third
+            });
         }
     }
 
-    console.log(`${total} follow up times saved.`);
+    await batchUpdateDeals(updates);
+    console.log(`${updates.length} follow up times batched and updated.`);
 }
 
 calculateResponseTimes();

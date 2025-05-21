@@ -1,5 +1,5 @@
 const axios = require('axios');
-const axiosRetry = require('axios-retry');
+const axiosRetry = require('axios-retry').default;
 const dayjs = require('dayjs');
 const isoWeek = require('dayjs/plugin/isoWeek');
 require('dotenv').config();
